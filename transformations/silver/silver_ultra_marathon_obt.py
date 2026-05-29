@@ -1,5 +1,5 @@
 from pyspark import pipelines as dp
-from utils.utils import rename_columns_to_snake_case
+from utils.utils import rename_columns_to_snake_case, remove_unclean_dl_performance
 from pyspark.sql import functions as sf
 from pyspark.sql.functions import col
 
@@ -16,6 +16,7 @@ from pyspark.sql.functions import col
 def cleaned_marathos():
     df = spark.sql("FROM STREAM supply_chain.bronze.bronze_ultra_marathon")
     df = rename_columns_to_snake_case(df)
+    df = remove_unclean_dl_performance(df)
 
     return (
         df.withColumn(
