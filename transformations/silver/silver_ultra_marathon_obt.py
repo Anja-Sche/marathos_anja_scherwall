@@ -1,5 +1,5 @@
 from pyspark import pipelines as dp
-from utils.utils import rename_columns_to_snake_case, remove_unclean_dl_performance
+from utils.utils import rename_columns_to_snake_case, remove_unclean_dl_performance, clean_vent_distance_length, calculate_performance_h
 from pyspark.sql import functions as sf
 from pyspark.sql.functions import col
 
@@ -17,25 +17,11 @@ def cleaned_marathos():
     df = spark.sql("FROM STREAM supply_chain.bronze.bronze_ultra_marathon")
     df = rename_columns_to_snake_case(df)
     df = remove_unclean_dl_performance(df)
+    df = clean_vent_distance_length(df)
+    df = calculate_performance_h(df)
 
     return (
         df.withColumn(
-            "event_distance_length_value",
-            sf.regexp_extract(col("event_distance_length"), r"^([0-9]+)", 1),
-        )
-        .withColumn(
-            "distance_length_type",
-            sf.regexp_extract(col("event_distance_length"), r"([a-zA-Z]+)", 1),
-        )
-        .withColumn(
-            "athlete_performance_value_km",
-            sf.regexp_extract(col("athlete_performance"), r"([0-9.,]+)\s*km", 1),
-        )
-        .withColumn(
-            "athlete_performance_value_h",
-            sf.regexp_extract(col("athlete_performance"), r"([0-9:;]+)\s*h", 1),
-        )
-        .withColumn(
             "event_country_code",
             sf.regexp_extract(col("event_name"), r"\(([a-zA-Z]+)\)", 1),
         )
