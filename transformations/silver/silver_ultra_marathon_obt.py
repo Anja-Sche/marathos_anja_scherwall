@@ -1,5 +1,5 @@
 from pyspark import pipelines as dp
-from utils.utils import rename_columns_to_snake_case, remove_unclean_dl_performance, clean_vent_distance_length, calculate_performance_h
+from utils.utils import rename_columns_to_snake_case, remove_unclean_dl_performance, clean_event_distance_length, calculate_performance_h, extract_country_code_event_name, split_dates, calculate_miles_to_km, valid_age, valid_avg_speed
 from pyspark.sql import functions as sf
 from pyspark.sql.functions import col
 
@@ -17,16 +17,12 @@ def cleaned_marathos():
     df = spark.sql("FROM STREAM supply_chain.bronze.bronze_ultra_marathon")
     df = rename_columns_to_snake_case(df)
     df = remove_unclean_dl_performance(df)
-    df = clean_vent_distance_length(df)
+    df = clean_event_distance_length(df)
     df = calculate_performance_h(df)
-
-    return (
-        df.withColumn(
-            "event_country_code",
-            sf.regexp_extract(col("event_name"), r"\(([a-zA-Z]+)\)", 1),
-        )
-        .withColumn(
-            "name_of_event",
-            sf.regexp_extract(col("event_name"), r"(.*[a-zA-Z]+)\s*\(", 1),
-        )
-    )
+    df = calculate_miles_to_km(df)
+    df = extract_country_code_event_name(df)
+    df = split_dates(df)
+    df = valid_age(df)
+    df = valid_avg_speed(df)
+    
+    return df
