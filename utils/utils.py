@@ -1,7 +1,10 @@
 import re
 from pyspark.sql import functions as sf, DataFrame
-from pyspark.sql.functions import col, coalesce, lit, StringType
+from pyspark.sql.functions import col, coalesce, lit
+from pyspark.sql.types import StringType
 from functools import reduce
+
+"""Rename columns for easier handeling"""
 
 def to_snake_case(name):
     name = name.strip().casefold()
@@ -12,6 +15,8 @@ def to_snake_case(name):
 def rename_columns_to_snake_case(df):
     new_columns = [to_snake_case(column) for column in df.columns]
     return df.toDF(*new_columns)
+
+"""Clean and validate event_distance_length"""
 
 def remove_unclean_dl_performance(df):
     return df.filter(
@@ -60,6 +65,8 @@ def clean_event_distance_length(df):
     )
     return df
 
+"""Clean performance hour value and create columns performance value/type"""
+
 def calculate_performance_h(df):
     df = (
         df.withColumn(
@@ -87,6 +94,8 @@ def calculate_performance_h(df):
     )
     return df
 
+"""Split event name and event country"""
+
 def extract_country_code_event_name(df):
     df = df.withColumn(
         "name_of_event",
@@ -96,6 +105,8 @@ def extract_country_code_event_name(df):
         sf.regexp_extract(col("event_name"), r"\(([a-zA-Z]+)\)", 1)
     )
     return df
+
+"""Split dates to start and end date. Include validation"""
 
 def split_dates(df):
     df = df.withColumn(
@@ -131,6 +142,8 @@ def split_dates(df):
     )
     return df
 
+"""Calculate and validate age"""
+
 def calculate_age(df):
     df = df.withColumn(
         "athlete_age",
@@ -144,6 +157,8 @@ def valid_age(df):
         (sf.col("athlete_age") <= 95) 
     )
     return df.filter(valid_age)
+
+"""Calculate athlete avg speed"""
 
 def calculate_avg_speed(df):
     df = df.withColumn(
@@ -161,16 +176,16 @@ def calculate_avg_speed(df):
                 sf.try_divide(
                     sf.col("athlete_performance_value"),
                     sf.col("event_distance_length_value"),
-                )
-            ),
-            2,
-        ),
+                )),
+            2)
     )
     return df
 
 def valid_avg_speed(df):
     valid_speed = sf.col("athlete_avg_speed") <= 20
     return df.filter(valid_speed)
+
+"""Join country code/name tables and replace country codes to names for event and athlete"""
 
 def create_country_and_code(df_country, df_country_old):
     def clean_match(df, code_col):
@@ -200,6 +215,8 @@ def join_country_name(df, df_countries_and_codes, country_code_col, new_col_name
     df = df.withColumnRenamed("Country", new_col_name)
     
     return df.drop(df_countries_and_codes["code"])
+
+"""Replace null values in strin columns with 'unknown' """
 
 def null_to_unknown_strings_types(df):
     for field in df.schema.fields:
