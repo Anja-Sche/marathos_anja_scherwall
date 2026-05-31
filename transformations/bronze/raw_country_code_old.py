@@ -6,6 +6,7 @@ schema = (
     spark.read.format("csv")
     .option("header", "true")
     .option("inferSchema", "true")
+    .option("sep", ";")
     .load(f"{BASE_DIR}/country_data/country_codes_old/country_codes_old.csv")
     .schema
 )
@@ -18,4 +19,4 @@ schema = (
            "delta.minWriterVersion": "5"
           })
 def raw_country_reference():
-    return spark.readStream.format("csv").options(header  =True, encoding = "latin1").schema(schema).load(f"{BASE_DIR}/country_data/country_codes_old")
+    return spark.readStream.format("csv").options(header  =True, encoding = "latin1", sep=";").schema(schema).load(f"{BASE_DIR}/country_data/country_codes_old")
