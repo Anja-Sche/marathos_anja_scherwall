@@ -51,17 +51,18 @@ def clean_event_distance_length(df):
         )
         .withColumn(
             "distance_length_value",
-            sf.when(
-                sf.col("distance_length_type") == "mi",
-                sf.col("distance_length_value").cast("double") * 1.609344,
-            ).otherwise(sf.col("distance_length_value").cast("double")),
-        )
+            sf.round(
+                sf.when(
+                    sf.col("distance_length_type") == "mi",
+                    sf.expr("try_cast(distance_length_value as double)") * 1.609344,
+                ).otherwise(sf.expr("try_cast(distance_length_value as double)")),
+                2,))
         .withColumn(
             "distance_length_type",
-            sf.when(
-                sf.col("distance_length_type") == "mi", sf.lit("km")
-            ).otherwise(sf.col("distance_length_type")),
-        )
+            sf.when(sf.col("distance_length_type") == "mi", sf.lit("km")).otherwise(
+                sf.col("distance_length_type")
+            ))
+        .filter(sf.col("distance_length_value").isNotNull())
     )
     return df
 
@@ -89,9 +90,10 @@ def calculate_performance_h(df):
                             + sf.expr("try_cast(substring_index(performance_value, ':', -1) as int)"
                             )
                             )/ 3600),5,).cast("double"),
-            ).otherwise(sf.expr("try_cast(performance_value as double)")),
+            ).otherwise(sf.expr("try_cast(performance_value as double)"))
         )
-    )
+    ).filter(sf.col("performance_value").isNotNull())
+
     return df
 
 """Split event name and event country"""
@@ -115,12 +117,14 @@ def split_dates(df):
         sf.col("event_dates").rlike(r"^\d{2}\.-\d{2}\."),
         sf.concat(
             sf.substring(sf.col("event_dates"), 1, 3),
-            sf.substring(sf.col("event_dates"), 8, 8))
+            sf.substring(sf.col("event_dates"), 8, 8)
+        )
     ).when(
         sf.col("event_dates").rlike(r"^\d{2}\.\d{2}\.\-"),
         sf.concat(
             sf.substring(sf.col("event_dates"), 1, 6),  
-            sf.substring(sf.col("event_dates"), -4, 4)  )
+            sf.substring(sf.col("event_dates"), -4, 4)  
+        )
     ).otherwise(
         sf.when(
             sf.col("event_dates").contains("-"),
@@ -139,7 +143,7 @@ def split_dates(df):
     ).withColumn(
         "end_date",
         sf.try_to_date(sf.col("end_date"), "dd.MM.yyyy")
-    )
+    ).dropna(subset=["start_date", "end_date"])
     return df
 
 """Calculate and validate age"""
@@ -152,11 +156,13 @@ def calculate_age(df):
     return df
 
 def valid_age(df):
-    valid_age = (
+    age_filter = (
         (sf.col("athlete_age") >= 10) & 
         (sf.col("athlete_age") <= 95) 
     )
-    return df.filter(valid_age)
+    return df.filter(age_filter).drop("athlete_age")
+
+"""Validate that gender and age category match"""
 
 def validate_gender_category():
     extracted_letter = sf.regexp_extract(sf.col("athlete_age_category"), r"(^[a-zA-Z]+)\s*", 1)
@@ -168,23 +174,23 @@ def validate_gender_category():
 """Calculate athlete avg speed"""
 
 def calculate_avg_speed(df):
-    df = df.withColumn(
-        "athlete_avg_speed",
-        sf.round(
-            sf.when(
-                sf.col("distance_length_type") == "km",
-                (
-                    sf.try_divide(
-                        sf.col("distance_length_value"),
-                        sf.col("performance_value"),
-                    )
-                ),
-            ).otherwise(
+    df = df.filter(
+        (sf.col("performance_value") > 0) & (sf.col("distance_length_value") > 0)
+        ).withColumn(
+            "athlete_avg_speed",
+            sf.round(
+                sf.when(
+                (sf.col("distance_length_type") == "km"),
+                sf.try_divide(
+                    sf.col("distance_length_value"),
+                    sf.col("performance_value")) 
+            ).when(
+                (sf.col("distance_length_type") == "h"),
                 sf.try_divide(
                     sf.col("performance_value"),
-                    sf.col("distance_length_value"),
-                )),
-            2)
+                    sf.col("distance_length_value")) 
+            ).otherwise(sf.lit(None)), 3 
+        )
     )
     return df
 
