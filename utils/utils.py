@@ -42,25 +42,25 @@ def remove_unclean_dl_performance(df):
 def clean_event_distance_length(df):
     df = (
         df.withColumn(
-            "event_distance_length_value",
+            "distance_length_value",
             sf.regexp_extract(col("event_distance_length"), r"^([0-9]+)", 1),
         )
         .withColumn(
-            "event_distance_length_type",
+            "distance_length_type",
             sf.regexp_extract(col("event_distance_length"), r"([a-zA-Z]+)", 1),
         )
         .withColumn(
-            "event_distance_length_value",
+            "distance_length_value",
             sf.when(
-                sf.col("event_distance_length_type") == "mi",
-                sf.col("event_distance_length_value").cast("double") * 1.609344,
-            ).otherwise(sf.col("event_distance_length_value").cast("double")),
+                sf.col("distance_length_type") == "mi",
+                sf.col("distance_length_value").cast("double") * 1.609344,
+            ).otherwise(sf.col("distance_length_value").cast("double")),
         )
         .withColumn(
-            "event_distance_length_type",
+            "distance_length_type",
             sf.when(
-                sf.col("event_distance_length_type") == "mi", sf.lit("km")
-            ).otherwise(sf.col("event_distance_length_type")),
+                sf.col("distance_length_type") == "mi", sf.lit("km")
+            ).otherwise(sf.col("distance_length_type")),
         )
     )
     return df
@@ -70,26 +70,26 @@ def clean_event_distance_length(df):
 def calculate_performance_h(df):
     df = (
         df.withColumn(
-            "athlete_performance_value",
+            "performance_value",
             sf.regexp_extract(col("athlete_performance"), r"([0-9,.;:]+)\s*", 1),
         )
         .withColumn(
-            "athlete_performance_type",
+            "performance_type",
             sf.regexp_extract(col("athlete_performance"), r"([a-zA-Z]+)", 1),
         )
         .withColumn(
-            "athlete_performance_value",
+            "performance_value",
             sf.when(
-                sf.col("athlete_performance_value").contains(":"),
+                sf.col("performance_value").contains(":"),
                 sf.round(((
                             sf.expr(
-                                "try_cast(substring_index(athlete_performance_value, ':', 1) as int)")* 3600
-                            + sf.expr("try_cast(substring_index(substring_index(athlete_performance_value, ':', 2), ':', -1) as int)"
+                                "try_cast(substring_index(performance_value, ':', 1) as int)")* 3600
+                            + sf.expr("try_cast(substring_index(substring_index(performance_value, ':', 2), ':', -1) as int)"
                             )* 60
-                            + sf.expr("try_cast(substring_index(athlete_performance_value, ':', -1) as int)"
+                            + sf.expr("try_cast(substring_index(performance_value, ':', -1) as int)"
                             )
                             )/ 3600),5,).cast("double"),
-            ).otherwise(sf.expr("try_cast(athlete_performance_value as double)")),
+            ).otherwise(sf.expr("try_cast(performance_value as double)")),
         )
     )
     return df
@@ -110,7 +110,7 @@ def extract_country_code_event_name(df):
 
 def split_dates(df):
     df = df.withColumn(
-    "event_start_date",
+    "start_date",
     sf.when(
         sf.col("event_dates").rlike(r"^\d{2}\.-\d{2}\."),
         sf.concat(
@@ -128,17 +128,17 @@ def split_dates(df):
         ).otherwise(sf.substring(sf.col("event_dates"), 1, 10))
     )
     ).withColumn(
-        "event_start_date",
-        sf.try_to_date(sf.col("event_start_date"), "dd.MM.yyyy")
+        "start_date",
+        sf.try_to_date(sf.col("start_date"), "dd.MM.yyyy")
     ).withColumn(
-        "event_end_date",
+        "end_date",
         sf.when(
             sf.col("event_dates").contains("-"),
             sf.regexp_extract(sf.col("event_dates"), r"\-([0-9,.;:]+)\s*", 1)
         ).otherwise(sf.col("event_dates"))
     ).withColumn(
-        "event_end_date",
-        sf.try_to_date(sf.col("event_end_date"), "dd.MM.yyyy")
+        "end_date",
+        sf.try_to_date(sf.col("end_date"), "dd.MM.yyyy")
     )
     return df
 
@@ -158,6 +158,13 @@ def valid_age(df):
     )
     return df.filter(valid_age)
 
+def validate_gender_category():
+    extracted_letter = sf.regexp_extract(sf.col("athlete_age_category"), r"(^[a-zA-Z]+)\s*", 1)
+    valid_male = (sf.col("athlete_gender") == "M") & (extracted_letter.isin ("M", "MU"))
+    vaild_female = (sf.col("athlete_gender") =="F") & (extracted_letter.isin ("F", "FU", "W", "WU"))
+        
+    return valid_male | vaild_female
+
 """Calculate athlete avg speed"""
 
 def calculate_avg_speed(df):
@@ -165,17 +172,17 @@ def calculate_avg_speed(df):
         "athlete_avg_speed",
         sf.round(
             sf.when(
-                sf.col("event_distance_length_type") == "km",
+                sf.col("distance_length_type") == "km",
                 (
                     sf.try_divide(
-                        sf.col("event_distance_length_value"),
-                        sf.col("athlete_performance_value"),
+                        sf.col("distance_length_value"),
+                        sf.col("performance_value"),
                     )
                 ),
             ).otherwise(
                 sf.try_divide(
-                    sf.col("athlete_performance_value"),
-                    sf.col("event_distance_length_value"),
+                    sf.col("performance_value"),
+                    sf.col("distance_length_value"),
                 )),
             2)
     )

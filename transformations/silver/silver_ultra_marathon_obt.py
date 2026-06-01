@@ -13,6 +13,7 @@ from utils.utils import (
     create_country_and_code,
     join_country_name,
     null_to_unknown_strings_types,
+    validate_gender_category
 )
 from pyspark.sql import functions as sf
 
@@ -43,6 +44,7 @@ def cleaned_marathos():
 
     df = calculate_age(df)
     df = valid_age(df)
+    df = df.filter(validate_gender_category())
 
     df = calculate_avg_speed(df)
     df = valid_avg_speed(df)
@@ -55,20 +57,13 @@ def cleaned_marathos():
     df = (
         df.withColumn(
             "date_id",
-            sf.sha2(
-                sf.concat_ws(
-                    "||", sf.col("event_start_date"), sf.col("event_end_date")),
-                256,)
-        )
-        .withColumn(
+            sf.abs(sf.xxhash64(sf.concat_ws("||", sf.col("start_date"), sf.col("end_date"))))
+        ).withColumn(
             "event_id",
-            sf.sha2(
-                sf.concat_ws("||", sf.col("name_of_event"), sf.col("event_start_date")),
-                256,)
-        )
-        .withColumn(
+            sf.abs(sf.xxhash64(sf.concat_ws("||", sf.col("name_of_event"), sf.col("start_date"))))
+        ).withColumn(
             "result_id",
-            sf.sha2(sf.concat_ws("||", sf.col("athlete_id"), sf.col("event_id")), 256)
+            sf.abs(sf.xxhash64(sf.concat_ws("||", sf.col("athlete_id"), sf.col("event_id"))))
         )
         .drop(
             "event_distance_length",
