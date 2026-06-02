@@ -1,0 +1,35 @@
+Modeling of the dimentional model/star schema done in dbdiagrams. Ultra maratond data for Marathos.
+For picture see dim_model_picture.png in same folder.
+
+
+Table fct_result {
+ result_id integer
+ event_id integer
+ date_id integer
+ athlete_id integer
+ performance_value double
+ performance_type string
+ athlete_average_speed double
+ age_category string
+ athlete_club string
+}
+Table dim_event {
+ event_id integer [primary key, ref:< fct_result.event_id]
+ event_name string
+ distance_length_value double
+ distance_length_type string
+ event_country string
+ number_of_finishers integer
+}
+Table dim_date{
+  date_id integer [primary key, ref:< fct_result.date_id]
+  year_of_event integer
+  start_date date
+  end_date date
+}
+Table dim_athlete {
+ athlete_id integer [primary key, ref:< fct_result.athlete_id]
+ year_of_birth double
+ athlete_gender string
+ athlete_country string
+}
