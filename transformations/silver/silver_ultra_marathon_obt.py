@@ -14,7 +14,8 @@ from utils.utils import (
     join_country_name,
     null_to_unknown_strings_types,
     validate_gender_category,
-    distance_filter
+    distance_filter,
+    standardize_gender_name
 )
 from pyspark.sql import functions as sf
 
@@ -47,6 +48,7 @@ def cleaned_marathos():
     df = calculate_age(df)
     df = valid_age(df)
     df = validate_gender_category(df)
+    df = standardize_gender_name(df)
 
     df = calculate_avg_speed(df)
     df = valid_avg_speed(df)

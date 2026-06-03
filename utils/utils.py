@@ -170,25 +170,24 @@ def valid_age(df):
     )
     return df.filter(age_filter).drop("athlete_age")
 
-"""Validate that gender and age category match"""
+"""Validate that gender and age category match, standardize gender name"""
 
 def validate_gender_category(df):
     extracted_letter = sf.regexp_extract(sf.col("athlete_age_category"), r"(^[a-zA-Z]+)\s*", 1)
     
-    valid_male = (sf.col("athlete_gender") == "M") & (extracted_letter.isin ("M", "MU"))
-    vaild_female = (sf.col("athlete_gender") =="F") & (extracted_letter.isin ("F", "FU", "W", "WU"))
+    valid_male = (sf.col("athlete_gender") == "M") & (extracted_letter.isin("M", "MU"))
+    vaild_female = (sf.col("athlete_gender") == "F") & (extracted_letter.isin("F", "FU", "W", "WU"))
 
-    df = df.withColumn(
-        "athlete_gender",
-        sf.when(valid_male, sf.lit("Male")).otherwise(sf.col("athlete_gender"))
-    ).withColumn(
-        "athlete_gender",
-        sf.when(vaild_female, sf.lit("Female")).otherwise(sf.col("athlete_gender"))
-    )
-
-    df_filtered = df.filter(valid_male | vaild_female)
+    df = df.filter(valid_male | vaild_female)
         
-    return df_filtered
+    return df
+
+def standardize_gender_name(df):
+    return df.withColumn(
+        "athlete_gender",
+        sf.when(sf.col("athlete_gender") == "M", sf.lit("Male"))
+        .otherwise(sf.lit("Female"))
+    )
 
 """Calculate athlete avg speed"""
 
