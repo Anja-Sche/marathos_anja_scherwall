@@ -70,8 +70,10 @@ def clean_event_distance_length(df):
 
 def distance_filter(df):
     df = df.filter(
-            (sf.col("distance_length_type") == "km") &
-            (sf.col("distance_length_value") > 42))
+            ((sf.col("distance_length_type") == "km") &
+            (sf.col("distance_length_value") > 42)) |
+        (sf.col("distance_length_type") == "h")
+    )
     return df
 
 """Clean performance hour value and create columns performance value/type"""
