@@ -1,7 +1,5 @@
 # Marathos - ultra marathon 
 
-A data pipeline bulit in Databricks.
-
 ## About
 Marathos hosts ultra marathons all over the world and they are starting their digital journey.
 In Databricks I have built a pipeline using medallion schema, bronze, silver and gold. This is to preserve the data in the different layers for the possibility to go back.
