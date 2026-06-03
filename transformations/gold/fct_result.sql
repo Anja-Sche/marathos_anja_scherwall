@@ -12,4 +12,4 @@ SELECT
     athlete_age_category AS age_category,
     athlete_club
 FROM 
-    STREAM (LIVE.silver_ultra_marathon_obt);
+    STREAM (marathos.silver.silver_ultra_marathon_obt);
