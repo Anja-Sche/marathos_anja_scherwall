@@ -66,6 +66,14 @@ def clean_event_distance_length(df):
     )
     return df
 
+"""Validate distance, > 42km (distance of a marathon)"""
+
+def distance_filter(df):
+    df = df.filter(
+            (sf.col("distance_length_type") == "km") &
+            (sf.col("distance_length_value") > 42))
+    return df
+
 """Clean performance hour value and create columns performance value/type"""
 
 def calculate_performance_h(df):
@@ -164,12 +172,23 @@ def valid_age(df):
 
 """Validate that gender and age category match"""
 
-def validate_gender_category():
+def validate_gender_category(df):
     extracted_letter = sf.regexp_extract(sf.col("athlete_age_category"), r"(^[a-zA-Z]+)\s*", 1)
+    
     valid_male = (sf.col("athlete_gender") == "M") & (extracted_letter.isin ("M", "MU"))
     vaild_female = (sf.col("athlete_gender") =="F") & (extracted_letter.isin ("F", "FU", "W", "WU"))
+
+    df = df.withColumn(
+        "athlete_gender",
+        sf.when(valid_male, sf.lit("Male")).otherwise(sf.col("athlete_gender"))
+    ).withColumn(
+        "athlete_gender",
+        sf.when(vaild_female, sf.lit("Female")).otherwise(sf.col("athlete_gender"))
+    )
+
+    df_filtered = df.filter(valid_male | vaild_female)
         
-    return valid_male | vaild_female
+    return df_filtered
 
 """Calculate athlete avg speed"""
 

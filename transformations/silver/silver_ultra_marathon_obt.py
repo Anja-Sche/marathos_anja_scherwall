@@ -13,7 +13,8 @@ from utils.utils import (
     create_country_and_code,
     join_country_name,
     null_to_unknown_strings_types,
-    validate_gender_category
+    validate_gender_category,
+    distance_filter
 )
 from pyspark.sql import functions as sf
 
@@ -37,6 +38,7 @@ def cleaned_marathos():
 
     df = remove_unclean_dl_performance(df)
     df = clean_event_distance_length(df)
+    df = distance_filter(df)
     df = calculate_performance_h(df)
 
     df = extract_country_code_event_name(df)
@@ -44,7 +46,7 @@ def cleaned_marathos():
 
     df = calculate_age(df)
     df = valid_age(df)
-    df = df.filter(validate_gender_category())
+    df = validate_gender_category(df)
 
     df = calculate_avg_speed(df)
     df = valid_avg_speed(df)
