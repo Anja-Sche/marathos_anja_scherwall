@@ -37,3 +37,5 @@ Gold EDA Was used to test SQL querys (requests) for creating the marts.
 [Sources to data and validation limits](docs/sources.md)
 
 [Reflections](docs/reflections.md)
+
+[Genie testing](docs/genie_trial.md)
