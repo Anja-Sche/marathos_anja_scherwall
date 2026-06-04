@@ -13,7 +13,7 @@ When cleaning the data you see new things for every new step and query. The silv
 
 when moving on to gold layer and later the dashboard and genie, there were things surfacing that needed alteration or more cleaning. This in combination with the pipeline taking time to run got frustrating at times.
 
-When choosing how to create new athlete ID i initiailly thought of using the old athlete ID in combination with birth year, athlete country and gender. After looking at the new dataset I realized that an athlete can get different IDs in different races. The issue arises if two athletes are from the same country, with same age and gender. If for email or name would had been included in the data, the problem would not arise.
+When choosing how to create new athlete ID i initiailly thought of using the old athlete ID in combination with birth year, athlete country and gender. After looking at the new dataset I realized that an athlete can get different IDs in different races. The issue arises if two athletes are from the same country, with same age and gender. If for email or name would had been included in the data, the problem would not arise. **For this dataset tho I chose to use the old athlete ID due to the change in procentage between male and female got very missleading.**
 
 ## Hardest part
 
