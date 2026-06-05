@@ -39,3 +39,8 @@ Gold EDA Was used to test SQL querys (requests) for creating the marts.
 [Reflections](docs/reflections.md)
 
 [Genie testing](docs/genie_trial.md)
+
+
+## Video presentation 
+[Marathos presentation on youtube](https://youtu.be/AHkmeXZyA-U) \
+(in swedish) 
