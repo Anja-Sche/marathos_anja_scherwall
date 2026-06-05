@@ -18,4 +18,4 @@ schema = (
            "delta.minWriterVersion": "5"
           })
 def raw_ultra_marathon():
-    return spark.readStream.format("cloudFiles").option("cloudFiles.format", "csv").options(header  =True, encoding = "latin1").schema(schema).load(f"{BASE_DIR}/data")
+    return spark.readStream.format("cloudFiles").option("cloudFiles.format", "csv").options(header  =True, encoding = "UTF-8").schema(schema).load(f"{BASE_DIR}/data")

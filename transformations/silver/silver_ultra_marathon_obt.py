@@ -66,14 +66,15 @@ def cleaned_marathos():
             "event_id",
             sf.abs(sf.xxhash64(sf.concat_ws("||", sf.col("name_of_event"), sf.col("start_date"))))
         ).withColumn(
-            "athlete_id",
-            sf.abs(sf.xxhash64(
-                sf.concat_ws("||", 
-                    sf.coalesce(sf.col("athlete_year_of_birth").cast("string"), sf.lit("0.0")),
-                    sf.coalesce(sf.lower(sf.trim(sf.col("athlete_gender"))), sf.lit("unknown")),
-                    sf.coalesce(sf.lower(sf.trim(sf.col("athlete_country_name"))), sf.lit("unknown"))
+    "athlete_id",
+    sf.abs(sf.xxhash64(
+        sf.concat_ws("||", 
+            sf.coalesce(sf.col("athlete_id").cast("string"), sf.lit("0.0")),
+            sf.coalesce(sf.col("athlete_year_of_birth").cast("string"), sf.lit("0.0")),
+            sf.coalesce(sf.lower(sf.trim(sf.col("athlete_gender"))), sf.lit("unknown")),
+            sf.coalesce(sf.lower(sf.trim(sf.col("athlete_country_name"))), sf.lit("unknown"))
         )))
-        ).withColumn(
+).withColumn(
             "result_id",
             sf.abs(sf.xxhash64(sf.concat_ws("||", sf.col("athlete_id"), sf.col("event_id"))))
         )
